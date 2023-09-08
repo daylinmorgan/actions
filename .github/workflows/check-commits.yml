@@ -1,0 +1,28 @@
+name: ⌛Check Commits
+
+on:
+  workflow_call:
+    inputs:
+      since:
+        type: string
+        default: '24 hours'
+
+jobs:
+  check-commits:
+    runs-on: ubuntu-latest
+    name: Check latest commit
+    outputs:
+      quit: ${{ steps.should_run.outputs.quit }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: print latest commit
+        run: echo ${{ github.sha }}
+
+      - name: check latest commit is less than a day
+        if: ${{ github.event_name == 'schedule' }}
+        run: |
+          if [[ -n "$(git rev-list --since='${{ inputs.since }}' HEAD)" ]]; then
+            echo "quit=true" >> "$GITHUB_OUTPUT"
+          fi
+
