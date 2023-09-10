@@ -16,8 +16,10 @@ jobs:
 
       - name: Download Build Artifacts
         uses: actions/download-artifact@v3
+        with:
+          path: artifacts/
 
-      - run: ls -R artifacts
+      - run: tree artifacts
 
       - name: Remove Old Nightly Release
         run: |
@@ -29,5 +31,5 @@ jobs:
           gh release create nightly \
             --title "Nightly Release (Pre-release)" \
             --prerelease \
-            ./artifacts/*
+            ./artifacts/**/*
 
