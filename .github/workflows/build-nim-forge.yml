@@ -1,4 +1,4 @@
-name: 👑⚙️ Build Nim Binaries w/ Forge
+name: 👑 ⚙️ Build Nim Binaries w/ Forge
 
 on:
   workflow_call:
