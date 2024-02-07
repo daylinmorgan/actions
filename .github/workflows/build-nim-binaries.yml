@@ -15,13 +15,30 @@ on:
         required: true
         description: name of module
       os:
+        type: string
+        required: true
       triple:
+        type: string
+        required: true
       name:
+        type: string
+        required: true
       cpu:
+        type: string
+        required: true
       name_cpu:
+        type: string
+        required: true
       nimble_cpu:
+        type: string
+        required: true
       archive_format:
+        type: string
+        required: true
       builder:
+        type: string
+        required: true
+
 
 jobs:
   build:
