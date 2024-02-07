@@ -5,11 +5,6 @@ on:
   push:
     tags:
     - 'v*' # "v1.2.3"
-    # branches:
-    # - main
-    # paths-ignore: ['media/**', 'docs/**', '**/*.md']
-    # pull_request:
-      # paths-ignore: ['media/**', 'docs/**', '**/*.md']
   workflow_call:
     inputs:
       module:
@@ -58,20 +53,21 @@ jobs:
             nim_cpu: arm64
             nimble_cpu: amd64
             archive_format: zip
-          - os: windows
-            triple: x86_64-w64-mingw32
-            name: windows
-            cpu: amd64
-            nim_cpu: amd64
-            nimble_cpu: amd64
-            archive_format: zip
-          - os: windows
-            triple: i686-w32-mingw32
-            name: windows
-            cpu: i686
-            nim_cpu: i386
-            nimble_cpu: amd64
-            archive_format: zip
+          # - os: windows
+          #   triple: x86_64-w64-mingw32
+          #   name: windows
+          #   cpu: amd64
+          #   nim_cpu: amd64
+          #   nimble_cpu: amd64
+          #   archive_format: zip
+          # - os: windows
+          #   triple: i686-w32-mingw32
+          #   name: windows
+          #   cpu: i686
+          #   nim_cpu: i386
+          #   nimble_cpu: amd64
+          #   archive_format: zip
+          #
         include:
           - target:
               os: linux
@@ -79,15 +75,15 @@ jobs:
           - target:
               os: macos
             builder: macos-11
-          - target:
-              os: windows
-            builder: windows-2019
+          # - target:
+          #     os: windows
+          #   builder: windows-2019
     defaults:
       run:
         shell: bash
 
     name: '${{ matrix.target.triple }}'
-    runs-on: ${{ matrix.builder }}
+    runs-on: '${{ matrix.builder }}'
     steps:
       - name: Setup Build
         if: matrix.builder == 'ubuntu-20.04'
@@ -120,7 +116,7 @@ jobs:
           path: ~/.nimble/
           key: ${{ matrix.target.os }}-${{ env.cache_nonce }}
 
-      - name: build nimlangserver
+      - name: Build ${{ inputs.module }}
         run: |
           echo i386.linux.gcc.exe = \"i686-linux-gnu-gcc\" >> nim.cfg
           echo i386.linux.gcc.linkerexe = \"i686-linux-gnu-gcc\" >> nim.cfg
