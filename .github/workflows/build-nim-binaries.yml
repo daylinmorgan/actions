@@ -7,93 +7,43 @@ on:
     - 'v*' # "v1.2.3"
   workflow_call:
     inputs:
+      binDir:
+        type: string
+        description: path to bin output dir
       module:
         type: string
         required: true
         description: name of module
+      os:
+      triple:
+      name:
+      cpu:
+      name_cpu:
+      nimble_cpu:
+      archive_format:
+      builder:
 
 jobs:
   build:
-    strategy:
-      fail-fast: true
-      matrix:
-        target:
-          - os: linux
-            triple: x86_64-linux-musl
-            name: linux
-            cpu: amd64
-            nim_cpu: amd64
-            nimble_cpu: amd64
-            archive_format: tgz
-          - os: linux
-            triple: i686-linux-musl
-            name: linux
-            cpu: i686
-            nim_cpu: i386
-            nimble_cpu: amd64
-            archive_format: tgz
-          - os: linux
-            triple: aarch64-linux-musl
-            name: linux
-            cpu: arm64
-            nim_cpu: arm64
-            nimble_cpu: amd64
-            archive_format: tgz
-          - os: macos
-            triple: x86_64-apple-darwin14
-            name: macos
-            cpu: amd64
-            nim_cpu: amd64
-            nimble_cpu: amd64
-            archive_format: zip
-          - os: macos
-            triple: aarch64-apple-darwin14
-            name: macos
-            cpu: arm64
-            nim_cpu: arm64
-            nimble_cpu: amd64
-            archive_format: zip
-          # - os: windows
-          #   triple: x86_64-w64-mingw32
-          #   name: windows
-          #   cpu: amd64
-          #   nim_cpu: amd64
-          #   nimble_cpu: amd64
-          #   archive_format: zip
-          # - os: windows
-          #   triple: i686-w32-mingw32
-          #   name: windows
-          #   cpu: i686
-          #   nim_cpu: i386
-          #   nimble_cpu: amd64
-          #   archive_format: zip
-          #
-        include:
-          - target:
-              os: linux
-            builder: ubuntu-20.04
-          - target:
-              os: macos
-            builder: macos-11
-          # - target:
-          #     os: windows
-          #   builder: windows-2019
     defaults:
       run:
         shell: bash
 
-    name: '${{ matrix.target.triple }}'
-    runs-on: '${{ matrix.builder }}'
+    name: '${{ inputs.triple }}'
+    runs-on: '${{ inputs.builder }}'
     steps:
       - name: Setup Build
-        if: matrix.builder == 'ubuntu-20.04'
+        if: inputs.builder == 'ubuntu-20.04'
         run: |
-          sudo apt install gcc make gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu \
-                                    gcc-i686-linux-gnu binutils-i686-linux-gnu \
-                                    mingw-w64
+          sudo apt install gcc make \
+            gcc-aarch64-linux-gnu \
+            binutils-aarch64-linux-gnu \
+            gcc-i686-linux-gnu \
+            binutils-i686-linux-gnu \
+            mingw-w64
 
       - name: Setup mingw32
-        if: matrix.target.triple == 'i686-w32-mingw32'
+        if: inputs.triple == 'i686-w32-mingw32'
         run: |
           curl -LSsO https://github.com/brechtsanders/winlibs_mingw/releases/download/11.1.0-12.0.0-8.0.2-r1/winlibs-i686-posix-dwarf-gcc-11.1.0-mingw-w64-8.0.2-r1.7z
           echo "588794e11be36389501610cf78de777e52a920e03db256ee8bd1a7c2c45e39a4 winlibs-i686-posix-dwarf-gcc-11.1.0-mingw-w64-8.0.2-r1.7z" | sha256sum -c
@@ -106,15 +56,15 @@ jobs:
       - name: Setup Nimble
         uses: nim-lang/nimble/.github/actions/install_nimble@master
         with:
-          os: ${{ matrix.target.name }}
-          cpu: ${{ matrix.target.nimble_cpu }}
+          os: ${{ inputs.name }}
+          cpu: ${{ inputs.nimble_cpu }}
 
       - name: Restore nimble dependencies from cache
         id: nimble_deps
         uses: actions/cache@v4
         with:
           path: ~/.nimble/
-          key: ${{ matrix.target.os }}-${{ env.cache_nonce }}
+          key: ${{ inputs.os }}-${{ env.cache_nonce }}
 
       - name: Build ${{ inputs.module }}
         run: |
@@ -122,41 +72,41 @@ jobs:
           echo i386.linux.gcc.linkerexe = \"i686-linux-gnu-gcc\" >> nim.cfg
           echo i386.windows.gcc.exe = \"i686-w64-mingw32-gcc.exe\" >> nim.cfg
           echo i386.windows.gcc.linkerexe = \"i686-w64-mingw32-gcc.exe\" >> nim.cfg
-          if [ ${{ matrix.target.triple }} = 'aarch64-apple-darwin14' ]; then
+          if [ ${{ inputs.triple }} = 'aarch64-apple-darwin14' ]; then
             echo "--passC:\"-target arm64-apple-macos11\"" >> nim.cfg
             echo "--passL:\"-target arm64-apple-macos11\"" >> nim.cfg
             cat nim.cfg
             nimble build -d:release --cpu:arm64 --os:macosx
           else
-            nimble build -d:release --cpu:${{ matrix.target.nim_cpu }}
+            nimble build -d:release --cpu:${{ inputs.nim_cpu }}
           fi
 
       - name: Compress the Binaries
         run: |
-          if [ ${{matrix.target.name}} = 'windows' ]; then
+          if [ ${{inputs.name}} = 'windows' ]; then
             EXEEXT=.exe
           else
             EXEEXT=
           fi
           if [ ${{ matrix.target.archive_format }} = 'zip' ]; then
-            7z a -tzip ${{ inputs.module }}-${{ matrix.target.name }}-${{ matrix.target.cpu }}.zip ${{ inputs.module }}${EXEEXT}
+            7z a -tzip ${{ inputs.module }}-${{ inputs.name }}-${{ inputs.cpu }}.zip ${{ inputs.module }}${EXEEXT}
           else
-            tar -czvf ${{ inputs.module }}-${{ matrix.target.name }}-${{ matrix.target.cpu }}.tar.gz ${{ inputs.module }}${EXEEXT}
+            tar -czvf ${{ inputs.module }}-${{ inputs.name }}-${{ inputs.cpu }}.tar.gz ${{ inputs.module }}${EXEEXT}
           fi
 
       - name: Upload the Nim Binaries (.zip)
-        if: matrix.target.archive_format == 'zip'
+        if: inputs.archive_format == 'zip'
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.module }}-${{ matrix.target.name }}-${{ matrix.target.cpu }}.zip
-          path: ${{ inputs.module }}-${{ matrix.target.name }}-${{ matrix.target.cpu }}.zip
+          name: ${{ inputs.module }}-${{ inputs.name }}-${{ inputs.cpu }}.zip
+          path: ${{ inputs.module }}-${{ inputs.name }}-${{ inputs.cpu }}.zip
 
       - name: Upload the Nim Binaries (.tar.gz)
-        if: matrix.target.archive_format == 'tgz'
+        if: inputs.archive_format == 'tgz'
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.module }}-${{ matrix.target.name }}-${{ matrix.target.cpu }}.tar.gz
-          path: ${{ inputs.module }}-${{ matrix.target.name }}-${{ matrix.target.cpu }}.tar.gz
+          name: ${{ inputs.module }}-${{ inputs.name }}-${{ inputs.cpu }}.tar.gz
+          path: ${{ inputs.module }}-${{ inputs.name }}-${{ inputs.cpu }}.tar.gz
 
   create-macos-universal-binary:
     name: Create a Universal macOS binary
@@ -196,28 +146,3 @@ jobs:
           name: ${{ inputs.module }}-macos-universal.zip
           path: ${{ inputs.module }}-macos-universal.zip
   
-  # create-github-release:
-  #   name: Create Github Release
-  #   needs: [build, create-macos-universal-binary]
-  #   runs-on: ubuntu-latest
-  #   permissions:
-  #     contents: write
-  #     actions: write
-  #   steps:
-  #     - name: Download artefacts
-  #       uses: actions/download-artifact@v4
-  #
-  #     - uses: ncipollo/release-action@v1
-  #       with:
-  #         name: Latest Nimlangserver Binaries
-  #         artifacts: "*/*"
-  #         allowUpdates: true
-  #         makeLatest: true
-  #         prerelease: true
-  #         tag: latest
-  #
-  #     - name: Delete artefacts
-  #       uses: geekyeggo/delete-artifact@v4
-  #       with:
-  #         failOnError: false
-  #         name: "nimlangserver-*"
