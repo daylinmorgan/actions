@@ -35,7 +35,7 @@ jobs:
           atlas install
 
       - name: Create artifact bundles
-        run:
+        run: |
           nim release
           nim bundle
 
