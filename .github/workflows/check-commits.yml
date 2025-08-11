@@ -18,7 +18,7 @@ jobs:
     outputs:
       quit: ${{ steps.should_run.outputs.quit }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: print latest commit
         run: echo ${{ github.sha }}
