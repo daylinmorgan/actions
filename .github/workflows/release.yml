@@ -16,8 +16,10 @@ jobs:
 
       - name: Download Build Artifacts
         uses: actions/download-artifact@v5
+        with:
+          path: artifacts/
 
-      - run: ls -R artifacts/
+      - run: tree artifacts
 
       - name: Generate New Release
         run: |
