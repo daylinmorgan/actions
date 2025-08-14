@@ -33,17 +33,19 @@ jobs:
         run: |
           last_tag=$(git describe --tags --abbrev=0 --match "v*.*")
           commits=$(git log $last_tag..HEAD --format="%h %s")
+          n_commits=$(printf "%s" "$commits" | grep -c "^")
           cat <<EOF > notes.md
           $last_tag..nightly
-          $(printf "%s" "$commits" | grep -c "^") commits since last release
+          $n_commits commits since last release
 
           ---
 
           $commits
           EOF
+
           gh release create nightly \
             --title "Nightly Release (Pre-release)" \
             --prerelease \
             -F notes.md \
-          ./artifacts/**/*
+            $(find artifacts -type f)
 
