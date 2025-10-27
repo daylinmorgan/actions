@@ -39,7 +39,7 @@ jobs:
           nim release
           nim bundle
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: artifacts
           path: |
