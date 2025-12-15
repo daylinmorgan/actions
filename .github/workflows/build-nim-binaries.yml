@@ -131,7 +131,7 @@ jobs:
     runs-on: macos-11
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           pattern: ${{ inputs.module }}-macos-*.zip
 
